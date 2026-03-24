@@ -552,10 +552,10 @@
 
     </style>
 </head>
-<body class="flex flex-col min-h-screen font-sans">
+<body class="flex flex-col min-h-screen font-sans w-full m-0 p-0 overflow-x-hidden">
     <!-- Main Content Area -->
-    <main class="flex-grow w-full px-2 sm:px-4 md:px-8 py-4 flex flex-col">
-        <div id="appCard" class="app-card p-4 sm:p-6 md:p-8 rounded-lg relative w-full flex-grow">
+    <main class="flex-grow w-full flex flex-col">
+        <div id="appCard" class="app-card p-4 sm:p-6 md:p-8 relative w-full flex-grow border-0 rounded-none shadow-none">
             
             <!-- Chave API Mapeada para o Topo -->
             <div class="mb-6 w-full relative config-panel p-4 rounded-lg">
@@ -845,6 +845,18 @@ A IA pode analisar este conteúdo para gerar imagens e metadados."></textarea>
         </div>
     </div>
 
+    <!-- Modal de Confirmação para Limpar Texto Principal -->
+    <div id="confirmMainTextModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3 class="modal-title">Atenção, Comandante!</h3>
+            <p class="modal-text">Tem certeza que deseja apagar todo o texto original?</p>
+            <div class="modal-actions">
+                <button id="cancelMainTextClearBtn" class="modal-btn modal-cancel">Cancelar</button>
+                <button id="confirmMainTextClearBtn" class="modal-btn modal-confirm">Sim, Apagar Texto</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer removido para integração limpa -->
 
     <script>
@@ -884,6 +896,10 @@ A IA pode analisar este conteúdo para gerar imagens e metadados."></textarea>
         const confirmModal = document.getElementById('confirmModal');
         const confirmClearBtn = document.getElementById('confirmClearBtn');
         const cancelClearBtn = document.getElementById('cancelClearBtn');
+        
+        const confirmMainTextModal = document.getElementById('confirmMainTextModal');
+        const confirmMainTextClearBtn = document.getElementById('confirmMainTextClearBtn');
+        const cancelMainTextClearBtn = document.getElementById('cancelMainTextClearBtn');
         
         // Botão fechar Metadados
         const closeMetadataBtn = document.getElementById('closeMetadataBtn');
@@ -966,9 +982,18 @@ A IA pode analisar este conteúdo para gerar imagens e metadados."></textarea>
         });
 
         clearMainTextBtn.addEventListener('click', () => {
+            confirmMainTextModal.classList.add('show');
+        });
+
+        cancelMainTextClearBtn.addEventListener('click', () => {
+            confirmMainTextModal.classList.remove('show');
+        });
+
+        confirmMainTextClearBtn.addEventListener('click', () => {
             inputText.value = '';
             inputText.dispatchEvent(new Event('input')); // Força a atualização dos contadores
             resetCopiedState();
+            confirmMainTextModal.classList.remove('show');
             showToast("Texto principal apagado!");
         });
 
