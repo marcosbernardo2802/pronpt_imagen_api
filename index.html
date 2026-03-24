@@ -239,7 +239,7 @@
 
         /* ---- ESTILOS ESPECÍFICOS DO FRAGMENTADOR ---- */
         
-        textarea, input[type="text"] {
+        textarea, input[type="text"], input[type="password"] {
             width: 100%;
             background-color: rgba(0,0,0,0.2);
             color: var(--color-text);
@@ -255,14 +255,14 @@
             min-height: 150px;
             resize: vertical;
         }
-        input[type="text"] {
+        input[type="text"], input[type="password"] {
             padding: 0.75rem 1rem;
         }
-        textarea:focus, input[type="text"]:focus {
+        textarea:focus, input[type="text"]:focus, input[type="password"]:focus {
             border-color: var(--color-primary);
             box-shadow: 0 0 0 2px var(--color-shadow);
         }
-        .light-theme textarea, .light-theme input[type="text"] {
+        .light-theme textarea, .light-theme input[type="text"], .light-theme input[type="password"] {
             background-color: rgba(255,255,255,0.5);
             color: #000;
         }
@@ -556,6 +556,32 @@
     <!-- Main Content Area -->
     <main class="flex-grow w-full px-2 sm:px-4 md:px-8 py-4 flex flex-col">
         <div id="appCard" class="app-card p-4 sm:p-6 md:p-8 rounded-lg relative w-full flex-grow">
+            
+            <!-- Chave API Mapeada para o Topo -->
+            <div class="mb-6 w-full relative config-panel p-4 rounded-lg">
+                <div class="flex justify-between items-center mb-2 w-full">
+                    <div class="flex flex-col sm:flex-row sm:items-center flex-grow justify-between pr-2 sm:pr-4 gap-1">
+                        <label for="geminiApiKey" class="font-bold text-sm text-red-400 flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>
+                            Chave da API (Google Gemini):
+                        </label>
+                        <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" class="text-[11px] text-primary hover:text-blue-400 underline font-bold transition-colors flex items-center gap-1 w-fit" title="Obtenha sua chave gratuitamente no Google AI Studio">
+                            Pegar Chave API
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                        </a>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <button class="field-action-btn" id="toggleApiKeyBtn" title="Mostrar/Ocultar Chave">
+                            <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                        </button>
+                        <button class="field-action-btn" id="clearApiKeyBtn" title="Limpar Campo">
+                            <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <input type="password" id="geminiApiKey" placeholder="Cole sua chave API aqui. Ficará salva no seu navegador." class="w-full">
+            </div>
+
             <!-- Text Input -->
             <div class="mb-6">
                 <div class="flex justify-between items-end mb-2">
@@ -600,7 +626,7 @@ A IA pode analisar este conteúdo para gerar imagens e metadados."></textarea>
             <!-- Options -->
             <div class="config-panel mb-6 flex flex-wrap gap-4 items-center p-4 rounded-lg">
                 <span class="font-bold text-sm text-gray-300 uppercase tracking-wider block w-full mb-2">Configurações e Personalização:</span>
-                
+
                 <div class="flex gap-4 mb-4 w-full border-b border-gray-600 pb-4">
                     <label class="flex items-center gap-2 cursor-pointer">
                         <input type="radio" name="splitMethod" value="paragraph" checked class="accent-cyan-400 w-4 h-4">
@@ -816,8 +842,8 @@ A IA pode analisar este conteúdo para gerar imagens e metadados."></textarea>
     <!-- Footer removido para integração limpa -->
 
     <script>
-        // API Configuration
-        const apiKey = ""; // Set by environment
+        // API Configuration fallback (intercepted by Canvas if empty, but we'll use input field)
+        const fallbackApiKey = ""; 
 
         // Elements
         const inputText = document.getElementById('inputText');
@@ -859,6 +885,9 @@ A IA pode analisar este conteúdo para gerar imagens e metadados."></textarea>
         const customRules = document.getElementById('customRules');
         const characterRefs = document.getElementById('characterRefs');
         const aiEngineInput = document.getElementById('aiEngine');
+        const geminiApiKeyInput = document.getElementById('geminiApiKey');
+        const toggleApiKeyBtn = document.getElementById('toggleApiKeyBtn');
+        const clearApiKeyBtn = document.getElementById('clearApiKeyBtn');
         
         const customFields = ['channelNiche', 'defaultTags', 'characterRefs', 'customRules', 'aiEngine'];
 
@@ -1012,6 +1041,28 @@ A IA pode analisar este conteúdo para gerar imagens e metadados."></textarea>
             });
         });
 
+        // Ações da API Key
+        geminiApiKeyInput.addEventListener('input', () => {
+            localStorage.setItem('geminiApiKey', geminiApiKeyInput.value.trim());
+        });
+
+        clearApiKeyBtn.addEventListener('click', () => {
+            geminiApiKeyInput.value = '';
+            localStorage.setItem('geminiApiKey', '');
+        });
+
+        toggleApiKeyBtn.addEventListener('click', function() {
+            const type = geminiApiKeyInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            geminiApiKeyInput.setAttribute('type', type);
+            if (type === 'text') {
+                 // Ícone Olho Normal (Mostrar)
+                 this.innerHTML = `<svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>`;
+            } else {
+                 // Ícone Olho Riscado (Ocultar)
+                 this.innerHTML = `<svg viewBox="0 0 24 24"><path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/></svg>`;
+            }
+        });
+
         // Save Customization
         const saveInputsToLocal = () => {
             localStorage.setItem('channelNiche', channelNicheInput.value);
@@ -1065,7 +1116,16 @@ A IA pode analisar este conteúdo para gerar imagens e metadados."></textarea>
 
         // Gemini API Helper com Exponential Backoff
         async function callGemini(prompt) {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            let currentKey = geminiApiKeyInput.value.trim();
+            if (!currentKey) {
+                currentKey = fallbackApiKey; // Tenta o fallback caso a chave esteja vazia
+            }
+            if (!currentKey) {
+                showToast("Erro: Insira a Chave API (Google Gemini) nas configurações!");
+                return null;
+            }
+
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${currentKey}`;
             const delays = [1000, 2000, 4000, 8000, 16000]; // Tentativas: 1s, 2s, 4s, 8s, 16s
             
             for (let i = 0; i <= delays.length; i++) {
@@ -1170,6 +1230,8 @@ A IA pode analisar este conteúdo para gerar imagens e metadados."></textarea>
                     metadataArea.classList.add('show');
                     showToast("Formato da IA variou, verifique o resultado.");
                 }
+            } else if (!geminiApiKeyInput.value.trim()) {
+                // Erro de chave vazia já exibido pela callGemini
             } else {
                 showToast("Erro ao conectar com a IA.");
             }
@@ -1249,7 +1311,7 @@ A IA pode analisar este conteúdo para gerar imagens e metadados."></textarea>
                     showToast("Prompt de imagem criado!");
                 }
             } else {
-                if (!window.isGeneratingAllPrompts) {
+                if (!window.isGeneratingAllPrompts && geminiApiKeyInput.value.trim()) {
                     showToast("Erro na IA. Tente novamente.");
                 }
             }
@@ -1320,7 +1382,8 @@ A IA pode analisar este conteúdo para gerar imagens e metadados."></textarea>
                         promptTextEl.setAttribute('data-pt', ptText);
                     } else {
                         btnEl.innerHTML = originalBtnContent;
-                        showToast("Erro na tradução.");
+                        // Não mostramos toast de erro genérico se for erro da chave
+                        if (geminiApiKeyInput.value.trim()) showToast("Erro na tradução.");
                         return;
                     }
                 }
@@ -1530,6 +1593,12 @@ A IA pode analisar este conteúdo para gerar imagens e metadados."></textarea>
         
         generateAllPromptsBtn.addEventListener('click', async () => {
             if (window.isGeneratingAllPrompts) return;
+
+            let currentKey = geminiApiKeyInput.value.trim() || fallbackApiKey;
+            if (!currentKey) {
+                showToast("Erro: Insira a Chave API (Google Gemini) nas configurações!");
+                return;
+            }
             
             const blocks = document.querySelectorAll('.text-block');
             if (blocks.length === 0) {
@@ -1689,6 +1758,10 @@ A IA pode analisar este conteúdo para gerar imagens e metadados."></textarea>
                 window.parent.postMessage('IFRAME_READY', '*');
             }
             
+            // Recuperar campo de Chave API primeiro para funcionar desde o início
+            const savedApiKey = localStorage.getItem('geminiApiKey');
+            if(savedApiKey) geminiApiKeyInput.value = savedApiKey;
+
             const savedChannel = localStorage.getItem('channelNiche');
             if(savedChannel) channelNicheInput.value = savedChannel;
 
