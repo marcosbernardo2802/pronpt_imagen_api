@@ -1633,7 +1633,7 @@ A IA pode analisar este conteúdo para gerar imagens e metadados."></textarea>
             showToast("Painel limpo com sucesso!");
         });
 
-        // Sincronizar tema com o portal pai via eventos de storage
+        // 1. Sincronizar tema com o portal pai via eventos de storage (se estiverem no mesmo domínio exato)
         window.addEventListener('storage', (e) => {
             if (e.key === 'theme') {
                 if (e.newValue === 'light') {
@@ -1644,7 +1644,29 @@ A IA pode analisar este conteúdo para gerar imagens e metadados."></textarea>
             }
         });
 
-        // Função global para o portal pai chamar diretamente (caso use iframe communication)
+        // 2. Sincronizar tema via postMessage (MÉTODO MAIS SEGURO PARA IFRAMES)
+        window.addEventListener('message', (event) => {
+            const data = event.data;
+            let themeToSet = null;
+
+            // Apanha o tema independentemente da forma como o portal o envia
+            if (typeof data === 'string' && (data === 'light' || data === 'dark')) {
+                themeToSet = data;
+            } else if (data && typeof data.theme === 'string') {
+                themeToSet = data.theme;
+            }
+
+            if (themeToSet) {
+                if (themeToSet === 'light') {
+                    body.classList.add('light-theme');
+                } else if (themeToSet === 'dark') {
+                    body.classList.remove('light-theme');
+                }
+                localStorage.setItem('theme', themeToSet);
+            }
+        });
+
+        // Função global para o portal pai chamar diretamente (se as políticas de CORS permitirem)
         window.setTheme = function(theme) {
             if (theme === 'light') {
                 body.classList.add('light-theme');
@@ -1660,6 +1682,11 @@ A IA pode analisar este conteúdo para gerar imagens e metadados."></textarea>
                 body.classList.add('light-theme');
             } else {
                 body.classList.remove('light-theme');
+            }
+            
+            // Avisar o portal que o Iframe carregou (para ele enviar o tema atual)
+            if (window.parent !== window) {
+                window.parent.postMessage('IFRAME_READY', '*');
             }
             
             const savedChannel = localStorage.getItem('channelNiche');
