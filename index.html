@@ -1151,16 +1151,20 @@ A IA pode analisar este conteúdo para gerar imagens e metadados."></textarea>
         // Gemini API Helper com Exponential Backoff
         async function callGemini(prompt) {
             let currentKey = geminiApiKeyInput.value.trim();
-            let modelName = "gemini-2.5-flash-preview-09-2025";
             
-            if (currentKey) {
-                modelName = "gemini-2.5-flash"; // Modelo para chaves públicas
-            } else {
-                currentKey = fallbackApiKey; // Vazio para injetar via ambiente
+            // SEGREDO PARA O PORTAL: Modelos "preview" dão erro 404 com chaves públicas externas.
+            // Se o utilizador inseriu uma chave (Portal), usamos o modelo de produção estável 1.5-flash.
+            // Caso contrário (ambiente de teste interno), mantemos o modelo preview padrão.
+            let modelName = currentKey ? "gemini-1.5-flash" : "gemini-2.5-flash-preview-09-2025";
+            let fetchKey = currentKey || fallbackApiKey; 
+
+            if (!fetchKey) {
+                showToast("Erro: Insira a Chave da API (Google Gemini) nas configurações!");
+                return null;
             }
 
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${currentKey}`;
-            const delays = [1000, 2000, 4000, 8000, 16000]; // Tentativas: 1s, 2s, 4s, 8s, 16s
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${fetchKey}`;
+            const delays = [1000, 2000, 4000]; // Tentativas: 1s, 2s, 4s
             
             for (let i = 0; i <= delays.length; i++) {
                 try {
@@ -1175,16 +1179,26 @@ A IA pode analisar este conteúdo para gerar imagens e metadados."></textarea>
                     if (response.ok) {
                         const data = await response.json();
                         return data.candidates?.[0]?.content?.parts?.[0]?.text || "Erro: Sem resposta da IA";
-                    }
-                    
-                    // Se não for 200 OK e for a última tentativa, desiste.
-                    if (i === delays.length) {
-                        console.error('Gemini API Error: Status ' + response.status);
-                        return null;
+                    } else {
+                        const errorData = await response.json();
+                        console.error('Gemini API Error:', errorData);
+                        
+                        // Se a chave for inválida ou o modelo não existir para esta conta, não vale a pena tentar novamente
+                        if (response.status === 400 || response.status === 403 || response.status === 404) {
+                            const errorMsg = response.status === 404 ? "Modelo de IA não encontrado para esta chave." : "Chave API inválida ou sem cota.";
+                            showToast(`Erro ${response.status}: ${errorMsg}`);
+                            return null;
+                        }
+                        
+                        if (i === delays.length) {
+                            showToast(`Falha na API: ${errorData.error?.message || 'Tente novamente.'}`);
+                            return null;
+                        }
                     }
                 } catch (error) {
+                    console.error('Gemini API Fetch Error:', error);
                     if (i === delays.length) {
-                        console.error('Gemini API Fetch Error:', error);
+                        showToast("Erro de conexão (Verifique a internet ou bloqueadores de anúncios).");
                         return null;
                     }
                 }
