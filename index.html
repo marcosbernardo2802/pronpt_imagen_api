@@ -1153,9 +1153,9 @@ A IA pode analisar este conteúdo para gerar imagens e metadados."></textarea>
             let currentKey = geminiApiKeyInput.value.trim();
             
             // SEGREDO PARA O PORTAL: Modelos "preview" dão erro 404 com chaves públicas externas.
-            // Se o utilizador inseriu uma chave (Portal), usamos o modelo de produção estável 1.5-flash.
+            // Se o utilizador inseriu uma chave (Portal), usamos o modelo de produção gemini-2.5-flash.
             // Caso contrário (ambiente de teste interno), mantemos o modelo preview padrão.
-            let modelName = currentKey ? "gemini-1.5-flash" : "gemini-2.5-flash-preview-09-2025";
+            let modelName = currentKey ? "gemini-2.5-flash" : "gemini-2.5-flash-preview-09-2025";
             let fetchKey = currentKey || fallbackApiKey; 
 
             if (!fetchKey) {
@@ -1278,6 +1278,8 @@ A IA pode analisar este conteúdo para gerar imagens e metadados."></textarea>
                     metadataArea.classList.add('show');
                     showToast("Formato da IA variou, verifique o resultado.");
                 }
+            } else if (!geminiApiKeyInput.value.trim()) {
+                // Erro de chave vazia já exibido pela callGemini
             } else {
                 showToast("Erro ao conectar com a IA.");
             }
@@ -1357,7 +1359,7 @@ A IA pode analisar este conteúdo para gerar imagens e metadados."></textarea>
                     showToast("Prompt de imagem criado!");
                 }
             } else {
-                if (!window.isGeneratingAllPrompts) {
+                if (!window.isGeneratingAllPrompts && geminiApiKeyInput.value.trim()) {
                     showToast("Erro na IA. Tente novamente.");
                 }
             }
@@ -1428,7 +1430,8 @@ A IA pode analisar este conteúdo para gerar imagens e metadados."></textarea>
                         promptTextEl.setAttribute('data-pt', ptText);
                     } else {
                         btnEl.innerHTML = originalBtnContent;
-                        showToast("Erro na tradução.");
+                        // Não mostramos toast de erro genérico se for erro da chave
+                        if (geminiApiKeyInput.value.trim()) showToast("Erro na tradução.");
                         return;
                     }
                 }
