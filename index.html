@@ -753,10 +753,16 @@ A IA pode analisar este conteúdo para gerar imagens e metadados."></textarea>
 
             <!-- Metadata Result Area -->
             <div id="metadataArea" class="hidden mt-8 p-6 config-panel rounded-lg">
-                <h3 class="text-xl font-bold text-primary mb-4 flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z"/></svg>
-                    Metadados para YouTube (Gemini)
-                </h3>
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-primary flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z"/></svg>
+                        Metadados para YouTube (Gemini)
+                    </h3>
+                    <button id="closeMetadataBtn" class="flex items-center justify-center h-6 px-2 rounded bg-red-600 hover:bg-red-500 text-white transition-all transform hover:-translate-y-0.5 shadow-sm font-bold text-[10px] uppercase tracking-wider gap-1" title="Fechar e limpar os metadados">
+                        Fechar
+                        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                    </button>
+                </div>
 
                 <!-- Titles Section -->
                 <div class="metadata-section">
@@ -878,6 +884,9 @@ A IA pode analisar este conteúdo para gerar imagens e metadados."></textarea>
         const confirmModal = document.getElementById('confirmModal');
         const confirmClearBtn = document.getElementById('confirmClearBtn');
         const cancelClearBtn = document.getElementById('cancelClearBtn');
+        
+        // Botão fechar Metadados
+        const closeMetadataBtn = document.getElementById('closeMetadataBtn');
 
         // Customization Elements
         const channelNicheInput = document.getElementById('channelNiche');
@@ -1117,15 +1126,15 @@ A IA pode analisar este conteúdo para gerar imagens e metadados."></textarea>
         // Gemini API Helper com Exponential Backoff
         async function callGemini(prompt) {
             let currentKey = geminiApiKeyInput.value.trim();
-            if (!currentKey) {
-                currentKey = fallbackApiKey; // Tenta o fallback caso a chave esteja vazia
-            }
-            if (!currentKey) {
-                showToast("Erro: Insira a Chave API (Google Gemini) nas configurações!");
-                return null;
+            let modelName = "gemini-2.5-flash-preview-09-2025";
+            
+            if (currentKey) {
+                modelName = "gemini-2.5-flash"; // Modelo para chaves públicas
+            } else {
+                currentKey = fallbackApiKey; // Vazio para injetar via ambiente
             }
 
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${currentKey}`;
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${currentKey}`;
             const delays = [1000, 2000, 4000, 8000, 16000]; // Tentativas: 1s, 2s, 4s, 8s, 16s
             
             for (let i = 0; i <= delays.length; i++) {
@@ -1230,8 +1239,6 @@ A IA pode analisar este conteúdo para gerar imagens e metadados."></textarea>
                     metadataArea.classList.add('show');
                     showToast("Formato da IA variou, verifique o resultado.");
                 }
-            } else if (!geminiApiKeyInput.value.trim()) {
-                // Erro de chave vazia já exibido pela callGemini
             } else {
                 showToast("Erro ao conectar com a IA.");
             }
@@ -1281,7 +1288,7 @@ A IA pode analisar este conteúdo para gerar imagens e metadados."></textarea>
             2. USO DE REFERÊNCIAS:
                - SE um personagem da lista de referências estiver na cena atual, USE a descrição dele.
                - SE o personagem NÃO estiver na cena, NÃO O INCLUA no prompt. Não force a presença de personagens em cenas onde eles não aparecem.
-            3. CONSISTÊNCIA VISUAL: Mantenha o estilo artístico definido.
+            3. CONSISTÊvisao VISUAL: Mantenha o estilo artístico definido.
             4. CRIAÇÃO DO PROMPT:
                - Sujeito: Apenas quem/o que está na cena atual.
                - Ação: Ação específica da cena.
@@ -1311,7 +1318,7 @@ A IA pode analisar este conteúdo para gerar imagens e metadados."></textarea>
                     showToast("Prompt de imagem criado!");
                 }
             } else {
-                if (!window.isGeneratingAllPrompts && geminiApiKeyInput.value.trim()) {
+                if (!window.isGeneratingAllPrompts) {
                     showToast("Erro na IA. Tente novamente.");
                 }
             }
@@ -1382,8 +1389,7 @@ A IA pode analisar este conteúdo para gerar imagens e metadados."></textarea>
                         promptTextEl.setAttribute('data-pt', ptText);
                     } else {
                         btnEl.innerHTML = originalBtnContent;
-                        // Não mostramos toast de erro genérico se for erro da chave
-                        if (geminiApiKeyInput.value.trim()) showToast("Erro na tradução.");
+                        showToast("Erro na tradução.");
                         return;
                     }
                 }
@@ -1594,7 +1600,10 @@ A IA pode analisar este conteúdo para gerar imagens e metadados."></textarea>
         generateAllPromptsBtn.addEventListener('click', async () => {
             if (window.isGeneratingAllPrompts) return;
 
-            let currentKey = geminiApiKeyInput.value.trim() || fallbackApiKey;
+            let currentKey = geminiApiKeyInput.value.trim();
+            if (!currentKey) {
+                currentKey = fallbackApiKey; // Tenta o fallback caso a chave esteja vazia
+            }
             if (!currentKey) {
                 showToast("Erro: Insira a Chave API (Google Gemini) nas configurações!");
                 return;
@@ -1701,6 +1710,16 @@ A IA pode analisar este conteúdo para gerar imagens e metadados."></textarea>
             confirmModal.classList.remove('show');
             showToast("Painel limpo com sucesso!");
         });
+
+        // Lógica do Botão de Fechar Metadados
+        if (closeMetadataBtn) {
+            closeMetadataBtn.addEventListener('click', () => {
+                metadataArea.classList.remove('show');
+                titlesList.innerText = '';
+                descText.innerText = '';
+                tagsText.innerText = '';
+            });
+        }
 
         // 1. Sincronizar tema com o portal pai via eventos de storage (se estiverem no mesmo domínio exato)
         window.addEventListener('storage', (e) => {
