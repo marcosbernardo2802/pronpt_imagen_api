@@ -553,16 +553,6 @@
     </style>
 </head>
 <body class="flex flex-col min-h-screen font-sans">
-    <!-- Back to Portal Button -->
-    <a href="https://cronicasestelares.vercel.app/" class="floating-button back-to-portal" title="Voltar ao portal Crônicas Estelares">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-    </a>
-    <!-- Theme Toggle Button -->
-    <div id="theme-toggle" class="floating-button theme-switcher">
-        <svg id="theme-icon-dark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21.64,13.14C20.97,13.14 20.3,13.42 19.82,13.9C19.34,14.38 19.06,15.05 19.06,15.72C19.06,16.39 19.34,17.06 19.82,17.54C20.3,18.02 20.97,18.3 21.64,18.3C22.31,18.3 22.98,18.02 23.46,17.54C23.94,17.06 24.22,16.39 24.22,15.72C24.22,15.05 23.94,14.38 23.46,13.9C22.98,13.42 22.31,13.14 21.64,13.14Z M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22C15.93,22 19.33,19.79 20.94,16.63C17.9,17.56 14.62,16.4 12.5,13.82C10.38,11.24 10.45,7.87 12.68,5.3C11.39,4.28 9.81,3.75 8.12,4.05C5.91,4.5 4.05,6.17 3.34,8.36C2.63,10.55 3.19,12.94 4.83,14.57C6.47,16.21 8.85,16.78 11.05,16.07C11.33,16 11.62,15.95 11.9,15.9C11.53,15.33 11.25,14.68 11.09,14C10.23,10.82 11.7,7.5 14.5,5.8C15.45,5.23 16.5,4.96 17.55,5C17.84,2.92 15.15,2 12,2Z"/></svg>
-        <svg id="theme-icon-light" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5V2.5H11V4.5H12M18.6,6.5L19.8,5.3L18.4,3.9L17.2,5.1L18.6,6.5M20.5,11H22.5V12H20.5V11M17.2,18.9L18.4,20.1L19.8,18.7L18.6,17.5L17.2,18.9M12,20.5V22.5H13V20.5H12M5.4,17.5L4.2,18.7L2.8,17.3L4,16.1L5.4,17.5M3.5,12H1.5V11H3.5V12M6.8,5.1L5.6,3.9L4.2,5.3L5.4,6.5L6.8,5.1Z"/></svg>
-    </div>
-
     <!-- Main Content Area -->
     <main class="flex-grow w-full px-2 sm:px-4 md:px-8 py-4 flex flex-col">
         <div id="appCard" class="app-card p-4 sm:p-6 md:p-8 rounded-lg relative w-full flex-grow">
@@ -849,7 +839,6 @@ A IA pode analisar este conteúdo para gerar imagens e metadados."></textarea>
         const copyAllBtn = document.getElementById('copyAllBtn');
         const selectAllPromptsCheckbox = document.getElementById('selectAllPrompts');
         const generateAllPromptsBtn = document.getElementById('generateAllPromptsBtn');
-        const themeToggle = document.getElementById('theme-toggle');
         const body = document.body;
         
         // Text Input Actions
@@ -1644,16 +1633,33 @@ A IA pode analisar este conteúdo para gerar imagens e metadados."></textarea>
             showToast("Painel limpo com sucesso!");
         });
 
-        themeToggle.addEventListener('click', () => {
-            body.classList.toggle('light-theme');
-            const isLightTheme = body.classList.contains('light-theme');
-            localStorage.setItem('theme', isLightTheme ? 'light' : 'dark');
+        // Sincronizar tema com o portal pai via eventos de storage
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'theme') {
+                if (e.newValue === 'light') {
+                    body.classList.add('light-theme');
+                } else {
+                    body.classList.remove('light-theme');
+                }
+            }
         });
+
+        // Função global para o portal pai chamar diretamente (caso use iframe communication)
+        window.setTheme = function(theme) {
+            if (theme === 'light') {
+                body.classList.add('light-theme');
+            } else {
+                body.classList.remove('light-theme');
+            }
+            localStorage.setItem('theme', theme);
+        };
 
         document.addEventListener('DOMContentLoaded', () => {
             const storedTheme = localStorage.getItem('theme');
             if (storedTheme === 'light') {
                 body.classList.add('light-theme');
+            } else {
+                body.classList.remove('light-theme');
             }
             
             const savedChannel = localStorage.getItem('channelNiche');
